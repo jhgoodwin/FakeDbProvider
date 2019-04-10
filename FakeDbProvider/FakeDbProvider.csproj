@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Goodwin.John.Fakes.FakeDbProvider</AssemblyName>
+    <RootNamespace>Goodwin.John.Fakes.FakeDbProvider</RootNamespace>
+  </PropertyGroup>
+
+</Project>
