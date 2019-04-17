@@ -1,0 +1,73 @@
+pool:
+  name: Hosted Ubuntu 1604
+
+variables:
+  BuildConfiguration: 'Release'
+  BuildPlatform: 'any cpu'
+  RestoreBuildProjects: '**/*.csproj'
+  TestProjects: '**/*[Tt]ests/*.csproj'
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: Restore
+  inputs:
+    command: restore
+    projects: '$(RestoreBuildProjects)'
+
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    projects: '$(RestoreBuildProjects)'
+    arguments: '--configuration $(BuildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: Test
+  inputs:
+    command: test
+    projects: '$(TestProjects)'
+    arguments: '--configuration $(BuildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: Publish
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: '$(RestoreBuildProjects)'
+    arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+    zipAfterPublish: True
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
+
+- task: YodLabs.VariableTasks.SetVariable.SetVariable@0
+  displayName: 'Set Variable NUGET_PACKAGE_VERSION_SUFFIX to -alpha with  applied'
+  inputs:
+    variableName: 'NUGET_PACKAGE_VERSION_SUFFIX'
+    value: '-alpha'
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+- task: YodLabs.VariableTasks.SetVariable.SetVariable@0
+  displayName: 'Set Variable NUGET_PACKAGE_VERSION to 1.0.$(Build.BuildNumber)$(NUGET_PACKAGE_VERSION_SUFFIX) with  applied'
+  inputs:
+    variableName: 'NUGET_PACKAGE_VERSION'
+    value: '1.0.$(Build.BuildNumber)$(NUGET_PACKAGE_VERSION_SUFFIX)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet pack'
+  inputs:
+    command: pack
+    nobuild: true
+    versioningScheme: byEnvVar
+    versionEnvVar: 'NUGET_PACKAGE_VERSION'
+
+- task: NuGetCommand@2
+  displayName: 'NuGet push'
+  inputs:
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'Nuget jhgoodwin'
+
+
