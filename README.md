@@ -1,5 +1,9 @@
 # Fake Db Provider for System.Data.Common.DbConnection
 
+## Master Branch Status
+
+* [![Build Status](https://johnhgoodwin.visualstudio.com/Public/_apis/build/status/FakeDbProvider-CI?branchName=master)](https://johnhgoodwin.visualstudio.com/Public/_build/latest?definitionId=3&branchName=master)
+
 Sometimes mocking just isn't enough, so you need a realistic double. This is where fakes come in.
 
 To get started, I copied the code from here:
