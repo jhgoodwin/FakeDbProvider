@@ -43,11 +43,18 @@ steps:
   condition: succeededOrFailed()
 
 - task: YodLabs.VariableTasks.SetVariable.SetVariable@0
-  displayName: 'Set Variable NUGET_PACKAGE_VERSION_SUFFIX to -alpha with  applied'
+  displayName: 'Set Variable NUGET_PACKAGE_VERSION_SUFFIX to -alpha for non-master builds'
   inputs:
     variableName: 'NUGET_PACKAGE_VERSION_SUFFIX'
     value: '-alpha'
   condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+- task: YodLabs.VariableTasks.SetVariable.SetVariable@0
+  displayName: 'Set Variable NUGET_PACKAGE_VERSION_SUFFIX to <blank> for master builds'
+  inputs:
+    variableName: 'NUGET_PACKAGE_VERSION_SUFFIX'
+    value: ''
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 - task: YodLabs.VariableTasks.SetVariable.SetVariable@0
   displayName: 'Set Variable NUGET_PACKAGE_VERSION to 1.0.$(Build.BuildNumber)$(NUGET_PACKAGE_VERSION_SUFFIX) with  applied'
