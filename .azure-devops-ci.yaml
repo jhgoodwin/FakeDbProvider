@@ -43,24 +43,18 @@ steps:
   condition: succeededOrFailed()
 
 - task: YodLabs.VariableTasks.SetVariable.SetVariable@0
-  displayName: 'Set Variable NUGET_PACKAGE_VERSION_SUFFIX to -alpha for non-master builds'
+  displayName: 'Master Builds - Set Variable NUGET_PACKAGE_VERSION to 1.0.$(Build.BuildNumber)'
   inputs:
-    variableName: 'NUGET_PACKAGE_VERSION_SUFFIX'
-    value: '-alpha'
-  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-- task: YodLabs.VariableTasks.SetVariable.SetVariable@0
-  displayName: 'Set Variable NUGET_PACKAGE_VERSION_SUFFIX to <blank> for master builds'
-  inputs:
-    variableName: 'NUGET_PACKAGE_VERSION_SUFFIX'
-    value: ''
+    variableName: 'NUGET_PACKAGE_VERSION'
+    value: '1.0.$(Build.BuildNumber)'
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 - task: YodLabs.VariableTasks.SetVariable.SetVariable@0
-  displayName: 'Set Variable NUGET_PACKAGE_VERSION to 1.0.$(Build.BuildNumber)$(NUGET_PACKAGE_VERSION_SUFFIX) with  applied'
+  displayName: 'Branch Builds - Set Variable NUGET_PACKAGE_VERSION to 1.0.$(Build.BuildNumber)$(NUGET_PACKAGE_VERSION_SUFFIX)'
   inputs:
     variableName: 'NUGET_PACKAGE_VERSION'
-    value: '1.0.$(Build.BuildNumber)$(NUGET_PACKAGE_VERSION_SUFFIX)'
+    value: '1.0.$(Build.BuildNumber)-alpha'
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet pack'
