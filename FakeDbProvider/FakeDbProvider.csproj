@@ -6,4 +6,8 @@
     <RootNamespace>Goodwin.John.Fakes.FakeDbProvider</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="4.6.3" />
+  </ItemGroup>
+
 </Project>

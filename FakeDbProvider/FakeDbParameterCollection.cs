@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 
 namespace Goodwin.John.Fakes.FakeDbProvider
 {
@@ -27,73 +28,78 @@ namespace Goodwin.John.Fakes.FakeDbProvider
         public override IEnumerator GetEnumerator()
             => _parameters.GetEnumerator();
 
-        public override object SyncRoot => throw new NotImplementedException();
+        public override object SyncRoot => ((ICollection) _parameters).SyncRoot;
 
-        public override void AddRange(Array values) => throw new NotImplementedException();
-
-        public override void Clear()
+        public override void AddRange(Array values)
         {
-            // no-op to test that parameters are passed correctly to db command.
+            foreach (var parameter in values.Cast<DbParameter>())
+            {
+                _parameters.Add(parameter);
+            }
         }
+
+        public override void Clear() => _parameters.Clear();
 
         public override bool Contains(string value)
-        {
-            throw new NotImplementedException();
-        }
+            => _parameters.Cast<DbParameter>().Any(p => p.ParameterName.Equals(value));
 
         public override bool Contains(object value)
-        {
-            throw new NotImplementedException();
-        }
+            => _parameters.Cast<DbParameter>().Any(p => p.Value.Equals(value));
 
         public override void CopyTo(Array array, int index)
         {
-            throw new NotImplementedException();
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
+            ((ICollection)_parameters).CopyTo(array, index);
         }
+
+        private static string NormalizedParameterName(string parameterName)
+            => parameterName.TrimStart(':', '@');
 
         public override int IndexOf(string parameterName)
         {
-            throw new NotImplementedException();
+            parameterName = NormalizedParameterName(parameterName);
+            for (int i = 0; i < _parameters.Count; i++)
+            {
+                if (NormalizedParameterName(((DbParameter)_parameters[i]).ParameterName)
+                    .Equals(parameterName, StringComparison.InvariantCultureIgnoreCase))
+                    return i;
+            }
+
+            return -1;
         }
 
         public override int IndexOf(object value)
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < _parameters.Count; i++)
+            {
+                if ((_parameters[i] as DbParameter).Value.Equals(value))
+                    return i;
+            }
+
+            return -1;
         }
 
-        public override void Insert(int index, object value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Insert(int index, object value) => _parameters.Insert(index, value);
 
-        public override void Remove(object value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Remove(object value) => _parameters.Remove(value);
 
-        public override void RemoveAt(string parameterName)
-        {
-            throw new NotImplementedException();
-        }
+        public override void RemoveAt(string parameterName) => RemoveAt(IndexOf(parameterName));
 
         public override void RemoveAt(int index)
         {
-            throw new NotImplementedException();
+            if (_parameters.Count - 1 < index)
+                throw new IndexOutOfRangeException();
+            _parameters.RemoveAt(index);
         }
 
         protected override DbParameter GetParameter(string parameterName)
-        {
-            throw new NotImplementedException();
-        }
+            => (DbParameter) _parameters[IndexOf(parameterName)];
 
         protected override void SetParameter(string parameterName, DbParameter value)
-        {
-            throw new NotImplementedException();
-        }
+            => SetParameter(IndexOf(parameterName), value);
 
-        protected override void SetParameter(int index, DbParameter value)
-        {
-            throw new NotImplementedException();
-        }
+        protected override void SetParameter(int index, DbParameter value) => _parameters[index] = value;
     }
 }
