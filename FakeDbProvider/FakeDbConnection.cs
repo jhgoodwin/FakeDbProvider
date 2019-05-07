@@ -19,6 +19,7 @@ namespace Goodwin.John.Fakes.FakeDbProvider
         private ConnectionState _state;
         private readonly List<FakeDbCommand> _dbCommands = new List<FakeDbCommand>();
         private readonly List<FakeDbTransaction> _dbTransactions = new List<FakeDbTransaction>();
+        private FakeDbTransaction _activeTransaction;
 
         public FakeDbConnection(
             string connectionString,
@@ -46,7 +47,7 @@ namespace Goodwin.John.Fakes.FakeDbProvider
         public override string ServerVersion => "Fake Db ServerVersion";
 
         private string DebugLogSuffix()
-            => $"{nameof(FakeDbConnection)} with {nameof(ConnectionString)} starting with, '{ConnectionString.Substring(0, 50).Trim()}'";
+            => $"{nameof(FakeDbConnection)} with {nameof(ConnectionString)} starting with, '{ConnectionString.Substring(0, Math.Min(ConnectionString.Length, 50)).Trim()}'";
 
         public override void ChangeDatabase(string databaseName)
         {
@@ -79,16 +80,30 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         protected override DbCommand CreateDbCommand()
         {
-            var command = new FakeDbCommand(this, _commandExecutor);
+            var command = new FakeDbCommand(this, _commandExecutor, ActiveTransaction);
 
             _dbCommands.Add(command);
 
             return command;
         }
 
+        public event EventHandler<TransactionChangedEventArgs> TransactionChanged;
+
         public IReadOnlyList<FakeDbTransaction> DbTransactions => _dbTransactions;
 
-        public FakeDbTransaction ActiveTransaction { get; set; }
+        public FakeDbTransaction ActiveTransaction
+        {
+            get => _activeTransaction;
+            set
+            {
+                TransactionChanged?.Invoke(this, new TransactionChangedEventArgs
+                {
+                    CurrentValue = _activeTransaction,
+                    NextValue = value
+                });
+                _activeTransaction = value;
+            }
+        }
 
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
         {
