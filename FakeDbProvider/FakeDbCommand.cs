@@ -7,6 +7,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using NLog;
 
 namespace Goodwin.John.Fakes.FakeDbProvider
@@ -22,10 +23,12 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         public FakeDbCommand(
             FakeDbConnection connection,
-            FakeCommandExecutor commandExecutor)
+            FakeCommandExecutor commandExecutor,
+            DbTransaction transaction = null)
         {
             DbConnection = connection;
             _commandExecutor = commandExecutor;
+            DbTransaction = transaction;
         }
 
         protected override DbConnection DbConnection { get; set; }
@@ -33,7 +36,7 @@ namespace Goodwin.John.Fakes.FakeDbProvider
         protected override DbTransaction DbTransaction { get; set; }
 
         private string DebugLogSuffix()
-            => $"{nameof(FakeDbCommand)} with {nameof(CommandText)} starting with, '{CommandText.Substring(0, 50).Trim()}'";
+            => $"{nameof(FakeDbCommand)} with {nameof(CommandText)} starting with, '{CommandText.Substring(0, Math.Min(CommandText.Length, 50)).Trim()}'";
 
         public override void Cancel()
         {
