@@ -7,11 +7,13 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 
 namespace Goodwin.John.Fakes.FakeDbProvider
 {
     public class FakeDbConnection : DbConnection
     {
+        private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
         private readonly FakeCommandExecutor _commandExecutor;
 
         private ConnectionState _state;
@@ -41,11 +43,14 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         public override string DataSource { get; } = "Fake DataSource";
 
-        public override string ServerVersion => throw new NotImplementedException();
+        public override string ServerVersion => "Fake Db ServerVersion";
+
+        private string DebugLogSuffix()
+            => $"{nameof(FakeDbConnection)} with {nameof(ConnectionString)} starting with, '{ConnectionString.Substring(0, 50).Trim()}'";
 
         public override void ChangeDatabase(string databaseName)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"Called {nameof(ChangeDatabase)} with {databaseName}{DebugLogSuffix()}");
         }
 
         public int OpenCount { get; private set; }

@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -82,15 +83,15 @@ namespace Goodwin.John.Fakes.FakeDbProvider
             return (int)_currentRow[ordinal];
         }
 
-        public override object this[string name] => throw new NotImplementedException();
+        public override object this[string name] => _currentRow[GetOrdinal(name)];
 
-        public override object this[int ordinal] => throw new NotImplementedException();
+        public override object this[int ordinal] => GetValue(ordinal);
 
         public override int Depth => throw new NotImplementedException();
 
-        public override bool HasRows => throw new NotImplementedException();
+        public override bool HasRows => _results.Any();
 
-        public override bool IsClosed => throw new NotImplementedException();
+        public override bool IsClosed => CloseCount > 0;
 
         public override int RecordsAffected => 0;
 
@@ -121,10 +122,7 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         public override double GetDouble(int ordinal) => (double)_currentRow[ordinal];
 
-        public override IEnumerator GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
+        public override IEnumerator GetEnumerator() => _results.GetEnumerator();
 
         public override Type GetFieldType(int ordinal)
         {
@@ -141,14 +139,23 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         public override int GetOrdinal(string name)
         {
-            throw new NotImplementedException();
+            var ordinal = Array.IndexOf(_columnNames, name);
+            if (ordinal < 0)
+            {
+                throw new System.IndexOutOfRangeException(
+                    $"Column {name} does not exist in the list of columns {String.Join(", ", _columnNames)}");
+            }
+
+            return ordinal;
         }
 
         public override string GetString(int ordinal) => (string)_currentRow[ordinal];
 
         public override int GetValues(object[] values)
         {
-            throw new NotImplementedException();
+            var columnsCopied = Math.Min(_currentRow.Length, values.Length);
+            Array.Copy(_currentRow, values, columnsCopied);
+            return columnsCopied;
         }
 
         public override bool NextResult()

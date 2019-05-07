@@ -7,11 +7,13 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 
 namespace Goodwin.John.Fakes.FakeDbProvider
 {
     public class FakeDbCommand : DbCommand
     {
+        private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
         private readonly FakeCommandExecutor _commandExecutor;
 
         public FakeDbCommand()
@@ -30,9 +32,12 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         protected override DbTransaction DbTransaction { get; set; }
 
+        private string DebugLogSuffix()
+            => $"{nameof(FakeDbCommand)} with {nameof(CommandText)} starting with, '{CommandText.Substring(0, 50).Trim()}'";
+
         public override void Cancel()
         {
-            throw new NotImplementedException();
+            Logger.Debug($"Attempted to cancel{DebugLogSuffix()}");
         }
 
         public override string CommandText { get; set; }
@@ -51,7 +56,7 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         public override void Prepare()
         {
-            throw new NotImplementedException();
+            Logger.Debug($"Prepared{DebugLogSuffix()}");
         }
 
         public override int ExecuteNonQuery()
@@ -98,14 +103,14 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         public override bool DesignTimeVisible
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => false;
+            set => Logger.Debug($"Set {nameof(DesignTimeVisible)} value {value}{DebugLogSuffix()}");
         }
 
         public override UpdateRowSource UpdatedRowSource
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => UpdateRowSource.None;
+            set => Logger.Debug($"Set {nameof(UpdatedRowSource)} value {value}{DebugLogSuffix()}");
         }
 
         public int DisposeCount { get; private set; }
