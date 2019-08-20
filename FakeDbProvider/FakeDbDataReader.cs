@@ -15,6 +15,9 @@ namespace Goodwin.John.Fakes.FakeDbProvider
     {
         private readonly string[] _columnNames;
         private readonly IList<object[]> _results;
+        private const int UnInitializedResultIndex = -1;
+        private const int FirstResultIndex = 0;
+        private int _resultNumber = UnInitializedResultIndex;
 
         private object[] _currentRow;
         private int _rowIndex;
@@ -126,7 +129,13 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         public override Type GetFieldType(int ordinal)
         {
-            throw new NotImplementedException();
+            if (_results.Any())
+            {
+                return _results[0][ordinal].GetType();
+            }
+
+            throw new NotImplementedException(
+                $"This implementation of GetFieldType does not yet support providing types when no results are provided.");
         }
 
         public override float GetFloat(int ordinal) => (float)_currentRow[ordinal];
@@ -160,7 +169,14 @@ namespace Goodwin.John.Fakes.FakeDbProvider
 
         public override bool NextResult()
         {
-            throw new NotImplementedException();
+            if (_resultNumber == UnInitializedResultIndex)
+            {
+                _resultNumber = FirstResultIndex;
+                return true;
+            }
+            
+            return false;
+
         }
     }
 }
